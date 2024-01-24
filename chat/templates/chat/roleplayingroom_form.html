@@ -1,0 +1,15 @@
+{# chat/templates/chat/roleplayingroom_form.html #}
+{% extends "chat/base.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+    <div class="card border-dark">
+        <form action="" method="post" novalidate> {# 유효성 검사 끄기 #}
+            {% csrf_token %}
+            <div class="card-header">상황 만들기</div>
+            <div class="card-body">{% bootstrap_form form layout="horizontal" %}</div>
+            <div class="card-footer text-end">
+                <input type="submit" value="저장하기" class="btn btn-primary"/>
+            </div>
+        </form>
+    </div>
+{% endblock %}
