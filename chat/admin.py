@@ -1,10 +1,7 @@
 from django.contrib import admin
-
-from .forms import RolePlayingRoomForm
 from .models import RolePlayingRoom
+from .forms import RolePlayingRoomForm
 
-
-# Register your models here.
 
 @admin.register(RolePlayingRoom)
 class RolePlayingRoomAdmin(admin.ModelAdmin):

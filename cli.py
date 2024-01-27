@@ -1,9 +1,17 @@
 import os
+from io import BytesIO
+from tempfile import NamedTemporaryFile
+
 import openai
+import pygame
 
 from dotenv import load_dotenv
+from gtts import gTTS
+
 load_dotenv()
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 # 상황극 설정
 language = "English"
@@ -14,12 +22,14 @@ situation_en = "make new friends"
 my_role_en = "me"
 gpt_role_en = "new friend"
 
+
 SYSTEM_PROMPT = (
     f"You are helpful assistant supporting people learning {language}. "
     f"Your name is {gpt_name}. Please assume that the user you are assisting "
     f"is {level_string}. And please write only the sentence without "
     f"the character role."
 )
+
 USER_PROMPT = (
     f"Let's have a conversation in {language}. Please answer in {language} only "
     f"without providing a translation. And please don't write down the "
@@ -29,12 +39,24 @@ USER_PROMPT = (
     f"I'm {level_string}, so please use {level_word} words as much as possible. "
     f"Now, start a conversation with the first sentence!"
 )
-# 대화 내역을 누적할 리스트
-messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+RECOMMEND_PROMPT = (
+    f"Can you please provide me an {level_word} example "
+    f"of how to respond to the last sentence "
+    f"in this situation, without providing a translation "
+    f"and any introductory phrases or sentences."
+)
 
 
-def gpt_query(user_query: str) -> str:
-    global messages # 코드를 간결하게 쓰기 위해 전역변수를 사용했을 뿐, 전역변수 사용은 안티패턴입니다.
+messages = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+]
+
+
+def gpt_query(user_query: str, skip_save: bool = False) -> str:
+    "유저 메세지에 대한 응답을 반환합니다."
+
+    global messages
 
     messages.append({
         "role": "user",
@@ -42,29 +64,56 @@ def gpt_query(user_query: str) -> str:
     })
 
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=messages, temperature=1
+        model="gpt-3.5-turbo",
+        messages=messages,
     )
     assistant_message = response["choices"][0]["message"]["content"]
-    messages.append({
-        "role": "assistant",
-        "content": assistant_message,
-    })
+
+    if skip_save is False:
+        messages.append({
+            "role": "assistant",
+            "content": assistant_message,
+        })
 
     return assistant_message
 
 
+def play_file(file_path: str) -> None:
+    pygame.mixer.init()
+    pygame.mixer.music.load(file_path)
+    pygame.mixer.music.play()
+
+    while pygame.mixer.music.get_busy():
+        pass
+
+    pygame.mixer.quit()
+
+
+def say(message: str, lang: str) -> None:
+    io = BytesIO()
+
+    gTTS(message, lang=lang).write_to_fp(io)
+
+    with NamedTemporaryFile() as f:
+        f.write(io.getvalue())
+        play_file(f.name)
+
+
 def main():
-    # 초기 응답 출력
     assistant_message = gpt_query(USER_PROMPT)
     print(f"[assistant] {assistant_message}")
-    # 유저 입력을 받아서 전달하고, 그에 대한 응답을 출력
-    # 빈 문자열을 입력받거나, Ctrl-C 입력을 받으면 대화 루프를 끝냅니다.
-    try:
-        while line := input("[user] ").strip():
+    say(assistant_message, "en")
+
+    while line := input("[user] ").strip():
+        if line == "!recommend":
+            recommended_message = gpt_query(RECOMMEND_PROMPT, skip_save=True)
+            print("추천 표현: ", recommended_message)
+        elif line == "!say":
+            say(messages[-1]["content"], "en")
+        else:
             response = gpt_query(line)
-            print("[assistant] {}".format(response))
-    except (EOFError, KeyboardInterrupt):
-        print("terminated by user.")
+            print(f"[assistant] {response}")
+            say(response, "en")
 
 
 if __name__ == "__main__":
