@@ -5,14 +5,14 @@ from django.db import models
 from django.urls import reverse
 
 
-class GptMessage(TypedDict):
+class GptMessage(TypedDict): # 타입 지정
     role: Literal["system", "user", "assistant"]
     content: str
 
 
 class RolePlayingRoom(models.Model):
-    class Language(models.TextChoices):
-        ENGLISH = "en-US", "English"
+    class Language(models.TextChoices): # 입력 문자열 범위 제한(선택지)
+        ENGLISH = "en-US", "English" # en-US는 db에 저장되는 값
         JAPANESE = "ja-JP", "Japanese"
         CHINESE = "zh-CN", "Chinese"
         SPANISH = "es-ES", "Spanish"
@@ -20,38 +20,46 @@ class RolePlayingRoom(models.Model):
         GERMAN = "de-DE", "German"
         RUSSIAN = "ru-RU", "Russian"
 
-    class Level(models.IntegerChoices):
+    class Level(models.IntegerChoices): # 숫자
         BEGINNER = 1, "초급"
         ADVANCED = 2, "고급"
 
-    class Meta:
-        ordering = ["-pk"]
+    class Meta: # Query set에 디폴트 정렬 방향 지정
+        ordering = ["-pk"] # 기본 키의 역순 정렬
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) # 생성 user 기록
+
     language = models.CharField(
         max_length=10,
         choices=Language.choices,
         default=Language.ENGLISH,
         verbose_name="대화 언어",
     )
-    level = models.SmallIntegerField(
+
+    level = models.SmallIntegerField( # 1=초급, 2=고급
         choices=Level.choices, default=Level.BEGINNER, verbose_name="레벨"
     )
+
     situation = models.CharField(max_length=100, verbose_name="상황")
+
     situation_en = models.CharField(
         max_length=100,
         blank=True,
         verbose_name="상황 (영문)",
         help_text="GPT 프롬프트에 직접적으로 활용됩니다. 비워두시면, situation 필드를 번역하여 자동 반영됩니다.",
     )
+
     my_role = models.CharField(max_length=100, verbose_name="내 역할")
+
     my_role_en = models.CharField(
         max_length=100,
         blank=True,
         verbose_name="내 역할 (영문)",
         help_text="GPT 프롬프트에 직접적으로 활용됩니다. 비워두시면, my_role 필드를 번역하여 자동 반영됩니다.",
     )
+
     gpt_role = models.CharField(max_length=100, verbose_name="GPT 역할")
+
     gpt_role_en = models.CharField(
         max_length=100,
         blank=True,
@@ -62,7 +70,7 @@ class RolePlayingRoom(models.Model):
     def get_absolute_url(self) -> str:
         return reverse("role_playing_room_detail", args=[self.pk])
 
-    def get_initial_messages(self) -> List[GptMessage]:
+    def get_initial_messages(self) -> List[GptMessage]: # 초기 system/user 프롬프트 생성
         gpt_name = "RolePlayingBot"
         language = self.get_language_display()
         situation_en = self.situation_en
@@ -96,7 +104,7 @@ class RolePlayingRoom(models.Model):
             f"as much as possible. Now, start a conversation with the first sentence!"
         )
 
-        return [
+        return [ # TypedDict 사전의 타입 등록
             GptMessage(role="system", content=system_message),
             GptMessage(role="user", content=user_message),
         ]

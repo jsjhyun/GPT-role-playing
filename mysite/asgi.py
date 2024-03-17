@@ -22,7 +22,7 @@ import chat.routing
 application = ProtocolTypeRouter(
     {
         "http": django_app,
-        "websocket": AuthMiddlewareStack(
+        "websocket": AuthMiddlewareStack( # 미들 웨어 설정
             URLRouter(chat.routing.websocket_urlpatterns),
         ),
     }

@@ -47,17 +47,17 @@ RECOMMEND_PROMPT = (
     f"and any introductory phrases or sentences."
 )
 
-
+# 메세지 누적
 messages = [
     {"role": "system", "content": SYSTEM_PROMPT},
 ]
 
 
+# 유저 메세지에 대한 응답을 반환합니다.
 def gpt_query(user_query: str, skip_save: bool = False) -> str:
-    "유저 메세지에 대한 응답을 반환합니다."
 
     global messages
-
+    # messages 리스트에 추가
     messages.append({
         "role": "user",
         "content": user_query,
@@ -101,7 +101,7 @@ def say(message: str, lang: str) -> None:
 
 def main():
     assistant_message = gpt_query(USER_PROMPT)
-    print(f"[assistant] {assistant_message}")
+    print(f"[assistant] {assistant_message}") # 첫 대화 먼저 제시
     say(assistant_message, "en")
 
     while line := input("[user] ").strip():

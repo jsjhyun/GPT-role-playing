@@ -24,13 +24,15 @@
         color: #fff;
         text-align: left;
     }
-    .chat-message .say {
-        display: block;
-        font-size: .8em;
-        margin-top: -0.4em;
-        margin-left: 0.2em;
-        cursor: pointer;
-    }
+    {#.chat-message .say {#}
+    {#    display: block;#}
+    {#    font-size: .8em;#}
+    {#    margin-top: -0.4em;#}
+    {#    margin-left: 0.2em;#}
+    {#    cursor: pointer;#}
+
+
+
 </style>
 {% endblock %}
 
@@ -48,11 +50,11 @@
                     <ul id="chat-message-list"></ul>
                 </div>
                 <div class="card-footer">
-                    <div class="d-grid gap-2 mb-2">
-                        <button id="auto-play-button" class="btn btn-primary">
-                            자동 읽기 시작
-                        </button>
-                    </div>
+{#                    <div class="d-grid gap-2 mb-2">#}
+{#                        <button id="auto-play-button" class="btn btn-primary">#}
+{#                            자동 읽기 시작#}
+{#                        </button>#}
+{#                    </div>#}
                     <div class="d-flex gap-2">
                         <button class="btn btn-secondary" id="recommend-button">추천받기</button>
                         <form id="message-form" class="d-flex gap-1 flex-grow-1">
@@ -75,17 +77,17 @@
 {% endblock %}
 
 {% block script %}
-{{ roleplayingroom.pk|json_script:"room-pk" }}
+{{ roleplayingroom.pk|json_script:"room-pk" }} {# JSON 직렬화 #}
 {{ roleplayingroom.language|json_script:"room-language" }}
 
 <script>
-function sayMessage(message, language) {
-    const lang = language.split("-")[0];  // en-US => en
-    const voiceUrl = `/voice/?message=${encodeURIComponent(message)}&lang=${lang}`;
-    const audio = new Audio();
-    audio.src = voiceUrl;
-    audio.play();
-}
+{#function sayMessage(message, language) {#}
+{#    const lang = language.split("-")[0];  // en-US => en#}
+{#    const voiceUrl = `/voice/?message=${encodeURIComponent(message)}&lang=${lang}`;#}
+{#    const audio = new Audio();#}
+{#    audio.src = voiceUrl;#}
+{#    audio.play();#}
+
 
 function addMessage(message, isMe) {
     const messageList = document.getElementById("chat-message-list");
@@ -93,17 +95,16 @@ function addMessage(message, isMe) {
     messageElement.className = "chat-message" + (isMe ? " me" : "");
     messageElement.innerHTML = `
         <span class="message">${message}</span>
-        <span class="say">읽어주기</span>
+{#        <span class="say">읽어주기</span>#}
     `;
     messageList.appendChild(messageElement);
     messageList.scrollTop = messageList.scrollHeight;
 
-    messageElement.querySelector(".say").addEventListener("click", () => {
-      sayMessage(message, room_language);
-    });
+    {#messageElement.querySelector(".say").addEventListener("click", () => {#}
+    {#  sayMessage(message, room_language);#}
 }
 
-let is_auto_play = false;
+{#let is_auto_play = false;#}
 const room_pk = document.querySelector("#room-pk").textContent;
 const room_language = JSON.parse(document.querySelector("#room-language").textContent);
 const ws = new WebSocket(`ws://${window.location.host}/ws/chat/${room_pk}/`);
@@ -121,9 +122,8 @@ ws.onmessage = function(e) {
     const { message } = message_obj;
     console.log("assistant-message :", message);
     addMessage(message, false);
-    if ( is_auto_play ) {
-      sayMessage(message, room_language);
-    }
+    {#if ( is_auto_play ) {#}
+    {#  sayMessage(message, room_language);#}
   }
   else if ( message_obj.type === "recommended-message" ) {
     const { message } = message_obj;
@@ -155,11 +155,10 @@ recommendButton.addEventListener("click", () => {
   ws.send(JSON.stringify({ type: "request-recommend-message" }));
 });
 
-const autoPlayButton = document.querySelector("#auto-play-button");
-autoPlayButton.addEventListener("click", () => {
-  is_auto_play = true;
-  autoPlayButton.remove();
-});
+{#const autoPlayButton = document.querySelector("#auto-play-button");#}
+{#autoPlayButton.addEventListener("click", () => {#}
+{#  is_auto_play = true;#}
+{#  autoPlayButton.remove();#}
 </script>
 
 {% endblock %}
